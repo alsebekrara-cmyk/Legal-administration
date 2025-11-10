@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الواتساب</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #25D366;
+            color: white;
+        }
+        button:hover {
+            background: #20BA5A;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>اختبار واتساب في Electron</h1>
+        
+        <button onclick="testWhatsAppProtocol()">اختبار whatsapp:// protocol</button>
+        <button onclick="testWhatsAppWeb()">اختبار واتساب ويب</button>
+        <button onclick="testWaMe()">اختبار wa.me</button>
+        <button onclick="clearLog()">مسح السجل</button>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const testPhone = '9640781234567';
+        const testMessage = 'مرحباً، هذه رسالة اختبار';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('ar-IQ');
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+            logDiv.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testWhatsAppProtocol() {
+            const url = `whatsapp://send?phone=${testPhone}&text=${encodeURIComponent(testMessage)}`;
+            log('🔵 محاولة فتح: ' + url);
+            
+            if (window.electronAPI) {
+                log('✅ Electron API متاح');
+                try {
+                    const result = await window.electronAPI.openExternal(url);
+                    log('📱 النتيجة: ' + JSON.stringify(result), result.success ? 'success' : 'error');
+                } catch (error) {
+                    log('❌ خطأ: ' + error.message, 'error');
+                }
+            } else {
+                log('⚠️ Electron API غير متاح (متصفح عادي)');
+                window.location.href = url;
+            }
+        }
+        
+        async function testWhatsAppWeb() {
+            const url = `https://web.whatsapp.com/send?phone=${testPhone}&text=${encodeURIComponent(testMessage)}`;
+            log('🔵 محاولة فتح: ' + url);
+            
+            if (window.electronAPI) {
+                try {
+                    const result = await window.electronAPI.openExternal(url);
+                    log('🌐 النتيجة: ' + JSON.stringify(result), result.success ? 'success' : 'error');
+                } catch (error) {
+                    log('❌ خطأ: ' + error.message, 'error');
+                }
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+        
+        async function testWaMe() {
+            const url = `https://wa.me/${testPhone}?text=${encodeURIComponent(testMessage)}`;
+            log('🔵 محاولة فتح: ' + url);
+            
+            if (window.electronAPI) {
+                try {
+                    const result = await window.electronAPI.openExternal(url);
+                    log('📲 النتيجة: ' + JSON.stringify(result), result.success ? 'success' : 'error');
+                } catch (error) {
+                    log('❌ خطأ: ' + error.message, 'error');
+                }
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+        
+        // تسجيل معلومات البيئة
+        window.addEventListener('load', () => {
+            log('🚀 تم تحميل الصفحة');
+            log('🔧 البيئة: ' + (window.electronAPI ? 'Electron' : 'Browser'));
+            if (window.electronAPI) {
+                log('💻 النظام: ' + window.electronAPI.platform);
+            }
+        });
+    </script>
+</body>
+</html>

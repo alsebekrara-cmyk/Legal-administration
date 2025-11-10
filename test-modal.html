@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار النافذة المنبثقة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .btn {
+            background: white;
+            color: #667eea;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .test-info {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .test-info h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .test-info p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .status h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .log {
+            font-family: monospace;
+            background: #1e1e1e;
+            color: #4ec9b0;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .log div {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white; margin-bottom: 30px; font-size: 36px;">🧪 اختبار النافذة المنبثقة</h1>
+    
+    <button class="btn" onclick="testModal()">فتح النافذة المنبثقة</button>
+    
+    <div class="status">
+        <h3>📊 سجل الاختبار</h3>
+        <div class="log" id="log">
+            <div>✅ جاهز للاختبار...</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="test-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ النافذة تعمل بنجاح!</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="test-info">
+                    <h4>🎉 تهانينا!</h4>
+                    <p>النافذة المنبثقة تعمل بشكل صحيح. إذا كنت تشاهد هذه الرسالة، فهذا يعني أن نظام النوافذ يعمل كما ينبغي.</p>
+                </div>
+                <div class="test-info">
+                    <h4>📝 معلومات تقنية</h4>
+                    <p><strong>الصنف:</strong> modal</p>
+                    <p><strong>الحالة:</strong> active</p>
+                    <p><strong>العرض:</strong> flex</p>
+                    <p><strong>التموضع:</strong> fixed</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="modal-manager.js"></script>
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString('ar-IQ');
+            logDiv.innerHTML += `<div>[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function testModal() {
+            log('🔓 محاولة فتح النافذة...');
+            
+            const modal = document.getElementById('test-modal');
+            if (!modal) {
+                log('❌ النافذة غير موجودة!');
+                return;
+            }
+            
+            log('✅ النافذة موجودة في DOM');
+            
+            if (typeof modalManager !== 'undefined') {
+                log('✅ modalManager متاح');
+                const opened = modalManager.open('test-modal');
+                if (opened) {
+                    log('✅ تم فتح النافذة بنجاح');
+                } else {
+                    log('❌ فشل فتح النافذة');
+                }
+            } else {
+                log('⚠️ modalManager غير متاح، استخدام الطريقة المباشرة');
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                log('✅ تم فتح النافذة يدوياً');
+            }
+        }
+
+        function closeModal() {
+            log('🔒 إغلاق النافذة...');
+            
+            if (typeof modalManager !== 'undefined') {
+                modalManager.close('test-modal');
+                log('✅ تم إغلاق النافذة بواسطة modalManager');
+            } else {
+                const modal = document.getElementById('test-modal');
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+                log('✅ تم إغلاق النافذة يدوياً');
+            }
+        }
+
+        // اختبار تلقائي عند التحميل
+        window.addEventListener('DOMContentLoaded', () => {
+            log('📄 تم تحميل الصفحة');
+            log(`📦 modalManager: ${typeof modalManager !== 'undefined' ? 'متاح ✅' : 'غير متاح ❌'}`);
+            
+            if (typeof modalManager !== 'undefined') {
+                log(`📊 النوافذ النشطة: ${modalManager.activeModals.size}`);
+            }
+        });
+    </script>
+</body>
+</html>

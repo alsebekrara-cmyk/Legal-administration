@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار استيراد البيانات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #10b981;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: #5568d3;
+        }
+        
+        .upload-area i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .status {
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        
+        ul {
+            list-style: none;
+            padding-right: 0;
+        }
+        
+        ul li {
+            padding: 8px 0;
+            color: #444;
+        }
+        
+        ul li i {
+            color: #10b981;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-file-import"></i> اختبار استيراد البيانات</h1>
+        <p class="subtitle">قم باستيراد ملف JSON المصدّر من Firebase</p>
+        
+        <div class="card">
+            <h2><i class="fas fa-upload"></i> رفع ملف البيانات</h2>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>انقر هنا لاختيار ملف JSON</h3>
+                <p style="color: #999; margin-top: 10px;">أو اسحب الملف وأفلته هنا</p>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".json">
+            
+            <div id="statusMessage" class="status"></div>
+        </div>
+        
+        <div class="card" id="statsCard" style="display: none;">
+            <h2><i class="fas fa-chart-bar"></i> إحصائيات البيانات المستوردة</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="casesCount">0</div>
+                    <div class="stat-label">الدعاوى</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="defendantsCount">0</div>
+                    <div class="stat-label">المدعى عليهم</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="lawyersCount">0</div>
+                    <div class="stat-label">المحامين</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="deductionsCount">0</div>
+                    <div class="stat-label">الاستقطاعات</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fas fa-info-circle"></i> التعليمات</h2>
+            <ul>
+                <li><i class="fas fa-check"></i> الملف يجب أن يكون بصيغة JSON</li>
+                <li><i class="fas fa-check"></i> يدعم ملفات Firebase المصدرة مباشرة</li>
+                <li><i class="fas fa-check"></i> يدعم ملفات النسخ الاحتياطي المحلية</li>
+                <li><i class="fas fa-check"></i> التطبيق سيحوّل البيانات تلقائياً</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" class="btn btn-success">
+                <i class="fas fa-rocket"></i> فتح التطبيق
+            </a>
+            <button onclick="testImport()" class="btn">
+                <i class="fas fa-vial"></i> اختبار البيانات
+            </button>
+            <a href="IMPORT_GUIDE.md" class="btn btn-secondary" target="_blank">
+                <i class="fas fa-book"></i> دليل الاستخدام
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const statusMessage = document.getElementById('statusMessage');
+        const statsCard = document.getElementById('statsCard');
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop
+        const uploadArea = document.querySelector('.upload-area');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#f0f4ff';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = '';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            handleFile(file);
+        }
+        
+        function handleFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showStatus('error', 'الرجاء اختيار ملف JSON صالح');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    processData(data);
+                } catch (error) {
+                    showStatus('error', 'فشل قراءة الملف - تأكد من أنه JSON صالح');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function processData(data) {
+            let stats = {
+                cases: 0,
+                defendants: 0,
+                lawyers: 0,
+                deductions: 0
+            };
+            
+            // Count data
+            if (data.cases) {
+                stats.cases = Array.isArray(data.cases) ? 
+                    data.cases.length : 
+                    Object.keys(data.cases).length;
+            }
+            
+            if (data.defendants) {
+                stats.defendants = Array.isArray(data.defendants) ? 
+                    data.defendants.length : 
+                    Object.keys(data.defendants).length;
+            }
+            
+            if (data.lawyers) {
+                stats.lawyers = Array.isArray(data.lawyers) ? 
+                    data.lawyers.length : 
+                    Object.keys(data.lawyers).length;
+            }
+            
+            if (data.deductions) {
+                stats.deductions = Array.isArray(data.deductions) ? 
+                    data.deductions.length : 
+                    Object.keys(data.deductions).length;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('legal-app-data', JSON.stringify(data));
+            
+            // Show results
+            showStats(stats);
+            showStatus('success', `تم تحميل البيانات بنجاح! وجدنا ${stats.cases} دعوى و ${stats.lawyers} محامي`);
+        }
+        
+        function showStats(stats) {
+            document.getElementById('casesCount').textContent = stats.cases;
+            document.getElementById('defendantsCount').textContent = stats.defendants;
+            document.getElementById('lawyersCount').textContent = stats.lawyers;
+            document.getElementById('deductionsCount').textContent = stats.deductions;
+            statsCard.style.display = 'block';
+        }
+        
+        function showStatus(type, message) {
+            statusMessage.className = `status ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+        }
+        
+        function testImport() {
+            const sample = document.getElementById('fileInput').value;
+            if (!sample) {
+                alert('الرجاء اختيار ملف أولاً');
+                return;
+            }
+            
+            // Try to import sample-data.json
+            fetch('sample-data.json')
+                .then(response => response.json())
+                .then(data => {
+                    processData(data);
+                    showStatus('info', 'تم اختبار البيانات التجريبية بنجاح!');
+                })
+                .catch(error => {
+                    showStatus('error', 'فشل تحميل البيانات التجريبية');
+                });
+        }
+    </script>
+</body>
+</html>

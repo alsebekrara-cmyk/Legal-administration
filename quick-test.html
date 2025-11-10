@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار سريع - استيراد البيانات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .console-output {
+            background: #1e1e1e;
+            color: #4ec9b0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .console-output.show {
+            display: block;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: block;
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .file-label:hover {
+            background: #e7f3ff;
+            border-color: #764ba2;
+        }
+        
+        .file-label i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار الاستيراد</h1>
+        <p class="subtitle">أداة اختبار سريعة لاستيراد وعرض بيانات Firebase</p>
+        
+        <label for="file-upload" class="file-label">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p><strong>اسحب وأفلت ملف JSON</strong></p>
+            <p style="color: #666; font-size: 12px; margin-top: 5px;">أو اضغط للاختيار</p>
+        </label>
+        <input type="file" id="file-upload" class="file-input" accept=".json">
+        
+        <button class="btn" onclick="quickTest()">
+            <i class="fas fa-bolt"></i> اختبار سريع من sample-data.json
+        </button>
+        
+        <button class="btn btn-success" onclick="showStats()">
+            <i class="fas fa-chart-bar"></i> عرض الإحصائيات
+        </button>
+        
+        <button class="btn btn-secondary" onclick="openMainApp()">
+            <i class="fas fa-external-link-alt"></i> فتح التطبيق الرئيسي
+        </button>
+        
+        <button class="btn btn-danger" onclick="clearData()">
+            <i class="fas fa-trash"></i> مسح جميع البيانات
+        </button>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">📊 الإحصائيات الحالية</h3>
+            <div class="stat-item">
+                <span class="stat-label">الدعاوى</span>
+                <span class="stat-value" id="stat-cases">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">المدعى عليهم</span>
+                <span class="stat-value" id="stat-defendants">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">المحامين</span>
+                <span class="stat-value" id="stat-lawyers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">الاستقطاعات</span>
+                <span class="stat-value" id="stat-deductions">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">الإشعارات</span>
+                <span class="stat-value" id="stat-notifications">0</span>
+            </div>
+        </div>
+        
+        <div class="console-output" id="console">
+            <div>✅ جاهز للاختبار...</div>
+        </div>
+    </div>
+    
+    <script src="shared-config.js"></script>
+    <script>
+        // إعداد البيانات الافتراضية
+        let data = {
+            cases: [],
+            defendants: [],
+            lawyers: [],
+            deductions: [],
+            notifications: [],
+            templates: [],
+            chatMessages: {}
+        };
+        
+        // تحميل البيانات من localStorage
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('legalAppData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    log('✅ تم تحميل البيانات من localStorage');
+                    return true;
+                }
+            } catch (error) {
+                log('❌ خطأ في تحميل البيانات: ' + error.message);
+            }
+            return false;
+        }
+        
+        // حفظ البيانات في localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('legalAppData', JSON.stringify(data));
+                log('✅ تم حفظ البيانات في localStorage');
+                return true;
+            } catch (error) {
+                log('❌ خطأ في حفظ البيانات: ' + error.message);
+                return false;
+            }
+        }
+        
+        // وظيفة الطباعة في Console المخصص
+        function log(message) {
+            const console = document.getElementById('console');
+            console.classList.add('show');
+            const time = new Date().toLocaleTimeString('ar-IQ');
+            console.innerHTML += `<div>[${time}] ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // اختبار سريع
+        async function quickTest() {
+            log('🚀 بدء الاختبار السريع...');
+            try {
+                const response = await fetch('sample-data.json');
+                const fileData = await response.json();
+                await processFile(fileData);
+            } catch (error) {
+                log('❌ خطأ: ' + error.message);
+            }
+        }
+        
+        // معالجة الملف
+        async function processFile(fileData) {
+            log('📄 تحليل الملف...');
+            
+            // التحقق من نوع البيانات
+            if (fileData.cases && typeof fileData.cases === 'object' && !Array.isArray(fileData.cases)) {
+                log('🔍 اكتشاف تنسيق Firebase');
+                data = convertFirebaseDataToLocal(fileData);
+            } else if (fileData.cases && Array.isArray(fileData.cases)) {
+                log('🔍 اكتشاف تنسيق محلي');
+                data = fileData;
+            } else {
+                throw new Error('تنسيق الملف غير معروف');
+            }
+            
+            // حفظ وعرض
+            if (saveData()) {
+                showStats();
+                log('🎉 تم الاستيراد بنجاح!');
+            }
+        }
+        
+        // تحويل بيانات Firebase
+        function convertFirebaseDataToLocal(firebaseData) {
+            log('🔄 تحويل بيانات Firebase...');
+            const local = {
+                cases: [],
+                defendants: [],
+                lawyers: [],
+                deductions: [],
+                notifications: [],
+                templates: [],
+                chatMessages: {}
+            };
+            
+            // تحويل الدعاوى
+            if (firebaseData.cases) {
+                const casesArray = Array.isArray(firebaseData.cases) 
+                    ? firebaseData.cases 
+                    : Object.values(firebaseData.cases);
+                casesArray.forEach(c => {
+                    if (!c) return;
+                    local.cases.push({
+                        id: c.id || generateId(),
+                        caseNumber: c.caseNumber || '',
+                        plaintiffName: c.plaintiffName || '',
+                        defendantName: c.defendantName || '',
+                        lawyerName: c.lawyerName || '',
+                        court: c.court || '',
+                        status: c.status || 'مرفوع',
+                        amount: parseFloat(c.amount) || 0,
+                        nextHearing: c.nextHearing || '',
+                        notes: c.notes || '',
+                        createdAt: c.createdAt || new Date().toISOString(),
+                        priority: c.priority || 'عادية',
+                        stage: c.stage || '',
+                        courtSection: c.courtSection || '',
+                        plaintiffAddress: c.plaintiffAddress || '',
+                        defendantAddress: c.defendantAddress || '',
+                        caseType: c.caseType || '',
+                        lawyer: c.lawyer || '',
+                        filingDate: c.filingDate || ''
+                    });
+                });
+                log(`  ✅ تم تحويل ${local.cases.length} دعوى`);
+            }
+            
+            // تحويل المدعى عليهم
+            if (firebaseData.defendants) {
+                const defendantsArray = Array.isArray(firebaseData.defendants)
+                    ? firebaseData.defendants
+                    : Object.values(firebaseData.defendants);
+                defendantsArray.forEach(d => {
+                    if (!d) return;
+                    local.defendants.push({
+                        id: d.id || generateId(),
+                        name: d.name || '',
+                        phone: d.phone || '',
+                        email: d.email || '',
+                        workplace: d.workplace || '',
+                        address: d.address || ''
+                    });
+                });
+                log(`  ✅ تم تحويل ${local.defendants.length} مدعى عليه`);
+            }
+            
+            // تحويل المحامين
+            if (firebaseData.lawyers) {
+                const lawyersArray = Array.isArray(firebaseData.lawyers)
+                    ? firebaseData.lawyers
+                    : Object.values(firebaseData.lawyers);
+                lawyersArray.forEach(l => {
+                    if (!l) return;
+                    local.lawyers.push({
+                        id: l.id || generateId(),
+                        name: l.name || '',
+                        licenseNumber: l.licenseNumber || '',
+                        phone: l.phone || '',
+                        specialty: l.specialty || '',
+                        experience: l.experience || ''
+                    });
+                });
+                log(`  ✅ تم تحويل ${local.lawyers.length} محامي`);
+            }
+            
+            // تحويل الاستقطاعات
+            if (firebaseData.deductions) {
+                const deductionsArray = Array.isArray(firebaseData.deductions)
+                    ? firebaseData.deductions
+                    : Object.values(firebaseData.deductions);
+                deductionsArray.forEach(d => {
+                    if (!d) return;
+                    local.deductions.push({
+                        id: d.id || generateId(),
+                        caseNumber: d.caseNumber || '',
+                        amount: parseFloat(d.amount) || 0,
+                        date: d.date || new Date().toISOString(),
+                        method: d.method || 'نقدي',
+                        notes: d.notes || ''
+                    });
+                });
+                log(`  ✅ تم تحويل ${local.deductions.length} استقطاع`);
+            }
+            
+            return local;
+        }
+        
+        // إنشاء معرف فريد
+        function generateId() {
+            return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // عرض الإحصائيات
+        function showStats() {
+            loadData();
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('stat-cases').textContent = data.cases.length;
+            document.getElementById('stat-defendants').textContent = data.defendants.length;
+            document.getElementById('stat-lawyers').textContent = data.lawyers.length;
+            document.getElementById('stat-deductions').textContent = data.deductions.length;
+            document.getElementById('stat-notifications').textContent = data.notifications.length;
+            log('📊 تم تحديث الإحصائيات');
+        }
+        
+        // فتح التطبيق الرئيسي
+        function openMainApp() {
+            window.location.href = 'index.html';
+        }
+        
+        // مسح البيانات
+        function clearData() {
+            if (confirm('⚠️ هل أنت متأكد من حذف جميع البيانات؟')) {
+                localStorage.removeItem('legalAppData');
+                data = {
+                    cases: [],
+                    defendants: [],
+                    lawyers: [],
+                    deductions: [],
+                    notifications: [],
+                    templates: [],
+                    chatMessages: {}
+                };
+                showStats();
+                log('🗑️ تم مسح جميع البيانات');
+            }
+        }
+        
+        // رفع ملف
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            log('📁 قراءة الملف: ' + file.name);
+            try {
+                const text = await file.text();
+                const fileData = JSON.parse(text);
+                await processFile(fileData);
+            } catch (error) {
+                log('❌ خطأ في قراءة الملف: ' + error.message);
+            }
+        });
+        
+        // Drag & Drop
+        const fileLabel = document.querySelector('.file-label');
+        
+        fileLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileLabel.style.background = '#e7f3ff';
+        });
+        
+        fileLabel.addEventListener('dragleave', () => {
+            fileLabel.style.background = '#f8f9fa';
+        });
+        
+        fileLabel.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            fileLabel.style.background = '#f8f9fa';
+            
+            const file = e.dataTransfer.files[0];
+            if (!file || !file.name.endsWith('.json')) {
+                log('❌ الرجاء رفع ملف JSON');
+                return;
+            }
+            
+            log('📁 قراءة الملف: ' + file.name);
+            try {
+                const text = await file.text();
+                const fileData = JSON.parse(text);
+                await processFile(fileData);
+            } catch (error) {
+                log('❌ خطأ: ' + error.message);
+            }
+        });
+        
+        // تحميل البيانات عند البدء
+        window.addEventListener('DOMContentLoaded', () => {
+            if (loadData()) {
+                showStats();
+            }
+        });
+    </script>
+</body>
+</html>
