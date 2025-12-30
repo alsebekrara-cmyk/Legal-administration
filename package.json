@@ -1,63 +1,106 @@
 {
   "name": "legal-management-app",
-  "productName": "تطبيق الإدارة القانونية",
   "version": "1.1.0",
-  "description": "تطبيق إدارة قانونية متكامل مع مزامنة سحابية",
+  "description": "تطبيق الإدارة القانونية",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "build": "electron-builder",
     "build-win": "electron-builder --win",
     "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux"
+    "build-linux": "electron-builder --linux",
+    "dist": "electron-builder --publish=never"
   },
-  "author": "الإبداع الرقمي",
+  "keywords": [
+    "legal",
+    "cases",
+    "management",
+    "arabic",
+    "court"
+  ],
+  "author": "تطبيق الإدارة القانونية",
   "license": "MIT",
-  "dependencies": {
-    "electron": "^27.0.0"
-  },
   "devDependencies": {
-    "electron-builder": "^24.6.4"
+    "electron": "^27.0.0",
+    "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.digital-creativity.legal-management",
+    "appId": "com.legal.management.app",
     "productName": "تطبيق الإدارة القانونية",
-    "copyright": "Copyright © 2025 الإبداع الرقمي",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
     },
     "files": [
       "**/*",
-      "!**/*.md",
-      "!**/node_modules/**",
-      "!dist/**"
+      "!node_modules/**/*",
+      "!dist/**/*",
+      "!*.log",
+      "!README.md",
+      "!.git/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/"
+      }
     ],
     "win": {
-      "target": ["nsis"],
-      "icon": "icon.png"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "requestedExecutionLevel": "asInvoker",
+      "publisherName": "تطبيق الإدارة القانونية",
+      "verifyUpdateCodeSignature": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Office"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "تطبيق الإدارة القانونية",
-      "installerIcon": "icon.png",
-      "uninstallerIcon": "icon.png",
-      "installerHeaderIcon": "icon.png",
+      "menuCategory": "مكتب",
+      "displayLanguageSelector": false,
+      "installerLanguages": [
+        "ar"
+      ],
+      "language": "1025",
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
-      "license": "LICENSE.txt",
-      "language": "1025"
+      "artifactName": "${productName} Setup ${version}.${ext}",
+      "uninstallDisplayName": "${productName}",
+      "installerIcon": "assets/icon.png",
+      "uninstallerIcon": "assets/icon.png"
     },
-    "mac": {
-      "target": ["dmg"],
-      "icon": "icon.png",
-      "category": "public.app-category.business"
-    },
-    "linux": {
-      "target": ["AppImage", "deb"],
-      "icon": "icon.png",
-      "category": "Office"
-    }
+    "compression": "maximum",
+    "publish": null
+  },
+  "dependencies": {
+    "jimp": "^1.6.0",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.4",
+    "to-ico": "^1.1.5"
   }
 }

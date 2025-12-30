@@ -1,69 +1,10 @@
-<script>
-function formatCurrency(amount) {
-    if (typeof amount !== 'number' || isNaN(amount)) return '';
-    return amount.toLocaleString('ar-EG', { style: 'currency', currency: 'IQD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-</script>
-<script>
-function sendWhatsAppToDefendant(caseId) {
-    // البحث عن الدعوى حسب ID
-    const caseItem = dataManager.casesData.find(c => c.id === caseId);
-    if (!caseItem) {
-        showNotification('خطأ', 'لم يتم العثور على بيانات الدعوى', 'error');
-        return;
-    }
-    const phone = (caseItem.defendantPhone || '').replace(/[^\d+]/g, '');
-    if (!phone || phone.length < 10) {
-        showNotification('تنبيه', 'رقم هاتف المدعى عليه غير صالح لإرسال رسالة واتساب.', 'warning');
-        return;
-    }
-    const amountText = caseItem.amount ? `المبلغ المالي المطلوب: ${formatCurrency(caseItem.amount)}.` : '';
-    const message = encodeURIComponent(
-        `تنبيه هام:
-نود إعلامك بأنه تم رفع دعوى قضائية ضدك رقم ${caseItem.caseNumber} باسمك (${caseItem.defendantName}).
-${amountText}
-يرجى زيارة الشركة في أقرب وقت ممكن لإبلاغنا باستلام هذا التنبيه ولمناقشة التفاصيل قبل اتخاذ أي إجراءات قانونية بحقك.
-للاستفسار أو التواصل يرجى الرد على هذه الرسالة.`
-    );
-    const whatsappAppUrl = `whatsapp://send?phone=${phone}&text=${message}`;
-    const whatsappWebUrl = `https://wa.me/${phone}?text=${message}`;
-    // دعم Electron
-    if (window && window.process && window.process.type) {
-        // Electron: استخدم shell.openExternal لفتح تطبيق واتساب فقط
-        try {
-            const { shell } = require('electron');
-            shell.openExternal(whatsappAppUrl);
-        } catch (e) {
-            showNotification('تنبيه', 'تعذر فتح تطبيق واتساب مباشرة. يرجى التأكد من تثبيت التطبيق.', 'warning');
-        }
-    } else {
-        // تطبيق ويب عادي
-        window.location.href = whatsappAppUrl;
-        setTimeout(function() {
-            window.open(whatsappWebUrl, '_blank');
-        }, 1500);
-    }
-}
-</script>
-<script>
-// دالة مؤقتة لمنع الخطأ عند استدعاء renderNotifications
-function renderNotifications() {
-    // يمكن لاحقاً إضافة منطق عرض الإشعارات هنا
-}
-</script>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق الإدارة القانونية - الإصدار المحسّن 2.0</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
-    <!-- External Libraries for Enhanced Features -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>تطبيق الإدارة القانونية</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -78,40 +19,19 @@ function renderNotifications() {
         }
 
         :root {
-            /* Primary Colors - Enhanced */
             --primary-blue: #3b82f6;
             --primary-blue-dark: #2563eb;
             --primary-blue-light: #dbeafe;
-            --primary-blue-ultralight: #eff6ff;
-            
-            /* Success Colors */
             --success-green: #10b981;
-            --success-green-dark: #059669;
             --success-green-light: #d1fae5;
-            
-            /* Warning Colors */
             --warning-yellow: #f59e0b;
-            --warning-yellow-dark: #d97706;
             --warning-yellow-light: #fef3c7;
-            
-            /* Error Colors */
             --error-red: #ef4444;
-            --error-red-dark: #dc2626;
             --error-red-light: #fee2e2;
-            
-            /* Info Colors */
-            --info-cyan: #06b6d4;
-            --info-cyan-light: #cffafe;
-            
-            /* Purple & Indigo */
             --purple: #8b5cf6;
             --purple-light: #ede9fe;
-            --purple-dark: #7c3aed;
             --indigo: #6366f1;
             --indigo-light: #e0e7ff;
-            --indigo-dark: #4f46e5;
-            
-            /* Gray Scale - Extended */
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
             --gray-200: #e5e7eb;
@@ -122,83 +42,12 @@ function renderNotifications() {
             --gray-700: #374151;
             --gray-800: #1f2937;
             --gray-900: #111827;
-            
-            /* Gradients - Beautiful */
             --gradient-primary: linear-gradient(135deg, var(--primary-blue), var(--indigo));
             --gradient-success: linear-gradient(135deg, var(--success-green), #059669);
-            --gradient-warning: linear-gradient(135deg, var(--warning-yellow), #d97706);
-            --gradient-error: linear-gradient(135deg, var(--error-red), #dc2626);
-            --gradient-purple: linear-gradient(135deg, var(--purple), var(--indigo));
-            --gradient-ocean: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-sunset: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-mint: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            
-            /* Shadows - Professional */
-            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            --shadow-colored-blue: 0 10px 30px -5px rgba(59, 130, 246, 0.3);
-            --shadow-colored-green: 0 10px 30px -5px rgba(16, 185, 129, 0.3);
-            --shadow-colored-purple: 0 10px 30px -5px rgba(139, 92, 246, 0.3);
-            
-            /* Transitions - Smooth */
-            --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* Border Radius - Modern */
-            --radius-xs: 0.25rem;
-            --radius-sm: 0.375rem;
-            --radius-md: 0.5rem;
-            --radius-lg: 0.75rem;
-            --radius-xl: 1rem;
-            --radius-2xl: 1.5rem;
-            --radius-full: 9999px;
-            
-            /* Spacing Scale */
-            --space-1: 0.25rem;
-            --space-2: 0.5rem;
-            --space-3: 0.75rem;
-            --space-4: 1rem;
-            --space-5: 1.25rem;
-            --space-6: 1.5rem;
-            --space-8: 2rem;
-            --space-10: 2.5rem;
-            --space-12: 3rem;
-            
-            /* Background Colors */
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8fafc;
-            --bg-tertiary: #f1f5f9;
-            --bg-overlay: rgba(0, 0, 0, 0.5);
-        }
-
-        /* Dark Mode - Enhanced */
-        [data-theme="dark"] {
-            --bg-primary: #1e293b;
-            --bg-secondary: #0f172a;
-            --bg-tertiary: #334155;
-            
-            --gray-50: #1e293b;
-            --gray-100: #334155;
-            --gray-200: #475569;
-            --gray-300: #64748b;
-            --gray-400: #94a3b8;
-            --gray-500: #cbd5e1;
-            --gray-600: #e2e8f0;
-            --gray-700: #f1f5f9;
-            --gray-800: #f8fafc;
-            --gray-900: #ffffff;
-            
-            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-            
-            --bg-overlay: rgba(0, 0, 0, 0.7);
         }
 
         body {
@@ -424,45 +273,7 @@ function renderNotifications() {
             min-height: 70px;
         }
 
-        /* Enhanced Action Buttons */
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-left: 1rem;
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--gray-200);
-            background: var(--bg-primary);
-            color: var(--gray-700);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition-base);
-            position: relative;
-        }
-
-        .action-btn:hover {
-            background: var(--primary-blue);
-            color: white;
-            border-color: var(--primary-blue);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-colored-blue);
-        }
-
-        .action-btn i {
-            font-size: 1rem;
-        }
-
-        .theme-icon {
-            transition: var(--transition-base);
-        }
-
-        /* Header Section */
+        /* Logo Section */
         .header-logo-section {
             flex-shrink: 0;
         }
@@ -6351,461 +6162,6 @@ function renderNotifications() {
                 opacity: 1;
             }
         }
-
-        /* ========================================
-           NEW ENHANCED ANIMATIONS
-        ======================================== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(-25%);
-                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-            }
-            50% {
-                transform: translateY(0);
-                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
-            100% {
-                background-position: 1000px 0;
-            }
-        }
-
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
-            }
-        }
-
-        /* ========================================
-           NEW UTILITY CLASSES
-        ======================================== */
-        .animate-fadeInUp {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .animate-fadeInDown {
-            animation: fadeInDown 0.6s ease-out;
-        }
-
-        .animate-scaleIn {
-            animation: scaleIn 0.4s ease-out;
-        }
-
-        .animate-bounce {
-            animation: bounce 1s infinite;
-        }
-
-        .hover-lift {
-            transition: var(--transition-base);
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .hover-scale {
-            transition: var(--transition-base);
-        }
-
-        .hover-scale:hover {
-            transform: scale(1.05);
-        }
-
-        .hover-glow {
-            transition: var(--transition-base);
-        }
-
-        .hover-glow:hover {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-        }
-
-        /* Gradient Text */
-        .gradient-text {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Glass Effect */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        /* Loading Skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, 
-                var(--gray-200) 0%, 
-                var(--gray-100) 50%, 
-                var(--gray-200) 100%);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite linear;
-            border-radius: var(--radius-md);
-        }
-
-        /* Ripple Effect */
-        .ripple-container {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(0);
-            animation: ripple 0.6s ease-out;
-            pointer-events: none;
-        }
-
-        /* Enhanced Cards */
-        .enhanced-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            padding: var(--space-6);
-            transition: var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .enhanced-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: var(--transition-base);
-        }
-
-        .enhanced-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .enhanced-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
-        }
-
-        /* Badge Styles */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-full);
-            font-size: 0.75rem;
-            font-weight: 600;
-            transition: var(--transition-fast);
-        }
-
-        .badge-primary {
-            background: var(--primary-blue-ultralight);
-            color: var(--primary-blue-dark);
-        }
-
-        .badge-success {
-            background: var(--success-green-light);
-            color: var(--success-green-dark);
-        }
-
-        .badge-warning {
-            background: var(--warning-yellow-light);
-            color: var(--warning-yellow-dark);
-        }
-
-        .badge-error {
-            background: var(--error-red-light);
-            color: var(--error-red-dark);
-        }
-
-        .badge-info {
-            background: var(--info-cyan-light);
-            color: var(--info-cyan);
-        }
-
-        .badge-gradient {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        /* Enhanced Buttons */
-        .btn-enhanced {
-            position: relative;
-            overflow: hidden;
-            transition: var(--transition-base);
-        }
-
-        .btn-enhanced::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn-enhanced:active::after {
-            width: 300px;
-            height: 300px;
-        }
-
-        /* Progress Bar */
-        .progress-bar-modern {
-            width: 100%;
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: var(--radius-full);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-fill-modern {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-full);
-            transition: width 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .progress-fill-modern::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent
-            );
-            animation: shimmer 2s infinite;
-        }
-
-        /* Tooltip Enhanced */
-        .tooltip-enhanced {
-            position: relative;
-        }
-
-        .tooltip-enhanced::before {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-8px);
-            background: var(--gray-900);
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: var(--radius-md);
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: var(--transition-fast);
-            z-index: 1000;
-        }
-
-        .tooltip-enhanced::after {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: var(--gray-900);
-            opacity: 0;
-            transition: var(--transition-fast);
-        }
-
-        .tooltip-enhanced:hover::before,
-        .tooltip-enhanced:hover::after {
-            opacity: 1;
-        }
-
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            padding: var(--space-6);
-            box-shadow: var(--shadow-md);
-            margin-bottom: var(--space-6);
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-4);
-        }
-
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .chart-canvas {
-            max-height: 400px;
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: var(--space-6);
-            margin-bottom: var(--space-8);
-        }
-
-        .stat-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            padding: var(--space-6);
-            box-shadow: var(--shadow-md);
-            transition: var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: var(--radius-xl);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            margin-bottom: var(--space-4);
-        }
-
-        .stat-icon.blue {
-            background: var(--primary-blue-ultralight);
-            color: var(--primary-blue);
-        }
-
-        .stat-icon.green {
-            background: var(--success-green-light);
-            color: var(--success-green);
-        }
-
-        .stat-icon.yellow {
-            background: var(--warning-yellow-light);
-            color: var(--warning-yellow);
-        }
-
-        .stat-icon.red {
-            background: var(--error-red-light);
-            color: var(--error-red);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: var(--space-2);
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-            margin-bottom: var(--space-3);
-        }
-
-        .stat-change {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: var(--radius-md);
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .stat-change.positive {
-            background: var(--success-green-light);
-            color: var(--success-green-dark);
-        }
-
-        .stat-change.negative {
-            background: var(--error-red-light);
-            color: var(--error-red-dark);
-        }
         
     </style>
 </head>
@@ -6975,19 +6331,6 @@ function renderNotifications() {
             
             <!-- User Section -->
             <div class="header-user-section">
-                <!-- Enhanced Action Buttons -->
-                <div class="header-actions">
-                    <button class="action-btn tooltip-enhanced" data-tooltip="تبديل الوضع الليلي" onclick="themeManager.toggleTheme()">
-                        <i class="fas fa-moon theme-icon"></i>
-                    </button>
-                    <button class="action-btn tooltip-enhanced" data-tooltip="تصدير البيانات" onclick="showExportMenu()">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="action-btn tooltip-enhanced" data-tooltip="طباعة" onclick="window.print()">
-                        <i class="fas fa-print"></i>
-                    </button>
-                </div>
-                
                 <div class="notification-area">
                     <button class="notification-btn" onclick="showNotifications()" title="الإشعارات">
                         <i class="fas fa-bell"></i>
@@ -7629,11 +6972,6 @@ function renderNotifications() {
                     <div class="form-field form-field-full">
                         <label><i class="fas fa-user-tie"></i>اسم المدعى عليه</label>
                         <input type="text" id="new-case-defendant-name" placeholder="الاسم الكامل للمدعى عليه">
-                    </div>
-
-                    <div class="form-field form-field-full">
-                        <label><i class="fas fa-phone"></i>رقم هاتف المدعى عليه</label>
-                        <input type="tel" id="new-case-defendant-phone" placeholder="مثال: +964-770-123-4567">
                     </div>
 
                     <div class="form-field form-field-full">
@@ -10906,11 +10244,6 @@ function renderNotifications() {
                                 if (uploadResult) {
                                     console.log('تم رفع البيانات المحلية إلى Firebase');
                                 }
-                                    // تحويل الاستقطاعات من كائن إلى مصفوفة إذا لزم الأمر
-                                    let deductions = deductionsRaw;
-                                    if (deductionsRaw && !Array.isArray(deductionsRaw) && typeof deductionsRaw === 'object') {
-                                        deductions = Object.values(deductionsRaw);
-                                    }
                             }
                         }, 5000); // انتظار 5 ثوانٍ للتأكد من اكتمال التحميل
                         
@@ -10948,10 +10281,6 @@ function renderNotifications() {
                     this.updateAllUI();
                     
                     console.log('تم تحميل ودمج البيانات من Firebase بنجاح');
-                        // تحديث واجهة الاستقطاعات بعد اكتمال التحميل
-                        if (typeof renderDeductionsTable === 'function') {
-                            renderDeductionsTable();
-                        }
                 } catch (error) {
                     console.error('خطأ في تحميل البيانات من Firebase:', error);
                 }
@@ -10975,17 +10304,15 @@ function renderNotifications() {
                     this.mergeArrayWithDeletedFilter(this.lawyersData, lawyers, 'lawyers');
                 }
                 
-                    // استبدال بيانات الاستقطاعات المحلية بالكامل ببيانات Firebase بعد الفلترة
-                    if (deductions && deductions.length > 0) {
-                        const deletedIds = this.deletedItems['deductions'] || [];
-                        this.deductionsData = deductions.filter(d => !deletedIds.includes(d.id));
-                    }
+                if (deductions && deductions.length > 0) {
+                    this.mergeArrayWithDeletedFilter(this.deductionsData, deductions, 'deductions');
+                }
                 
                 // تحديث المصفوفات المفلترة
                 this.filteredCases = [...this.casesData];
                 this.filteredDefendants = [...this.defendantsData];
                 this.filteredLawyers = [...this.lawyersData];
-                    this.filteredDeductions = [...this.deductionsData];
+                this.filteredDeductions = [...this.deductionsData];
                 
                 console.log('بعد الدمج - الدعاوى:', this.casesData.length, 'المدعى عليهم:', this.defendantsData.length, 'المحامين:', this.lawyersData.length, 'الاستقطاعات:', this.deductionsData.length);
             }
@@ -15478,9 +14805,6 @@ function renderNotifications() {
                             <button class="action-btn edit" onclick="editCase(${caseItem.id})" title="تحرير">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn whatsapp" onclick="sendWhatsAppToDefendant(${caseItem.id})" title="إرسال رسالة واتساب للمدعى عليه">
-                                <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-                            </button>
                             <button class="action-btn delete" onclick="deleteCase(${caseItem.id})" title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -15590,69 +14914,58 @@ function renderNotifications() {
             const tbody = document.getElementById('deductions-table-body');
             if (!tbody) return;
 
-            // تحديث بيانات الاستقطاعات من قاعدة البيانات مباشرة قبل العرض
-            firebaseSync.loadFromFirebase('deductions').then(deductionsRaw => {
-                let deductions = deductionsRaw;
-                if (deductionsRaw && !Array.isArray(deductionsRaw) && typeof deductionsRaw === 'object') {
-                    deductions = Object.values(deductionsRaw);
-                }
-                // استبدال بيانات الاستقطاعات المحلية
-                dataManager.deductionsData = deductions;
-                dataManager.filteredDeductions = [...deductions];
+            console.log('Debug - Rendering deductions table with', dataManager.filteredDeductions.length, 'deductions');
 
-                console.log('Debug - Rendering deductions table with', dataManager.filteredDeductions.length, 'deductions');
-
-                if (dataManager.filteredDeductions.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--gray-500);">
-                                <i class="fas fa-coins" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                                ${dataManager.deductionsData.length === 0 ? 'لا توجد استقطاعات مسجلة بعد.' : 'لم يتم العثور على أي استقطاعات تطابق البحث'}
-                            </td>
-                        </tr>
+            if (dataManager.filteredDeductions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                            <i class="fas fa-coins" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            ${dataManager.deductionsData.length === 0 ? 'لا توجد استقطاعات مسجلة بعد.' : 'لم يتم العثور على أي استقطاعات تطابق البحث'}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = dataManager.filteredDeductions.map(deduction => {
+                    // Handle different ID formats for onclick events
+                    const deductionId = typeof deduction.id === 'string' ? `'${deduction.id}'` : deduction.id;
+                    
+                    return `
+                    <tr>
+                        <td><strong>${deduction.plaintiffName}</strong></td>
+                        <td style="color: var(--primary-blue); font-weight: 600;">${deduction.caseNumber}</td>
+                        <td style="color: var(--success-green); font-weight: 700;">${dataManager.formatNumber(deduction.amount)} د.ع</td>
+                        <td>${dataManager.formatDate(deduction.date)}</td>
+                        <td>${deduction.source}</td>
+                        <td>
+                            <span class="status-badge" style="background: var(--success-green-light); color: var(--success-green);">
+                                <i class="fas fa-check-circle" style="font-size: 0.75rem;"></i>
+                                ${deduction.status}
+                            </span>
+                        </td>
+                        <td>
+                            ${deduction.addedVia === 'mobile_app' ? 
+                                '<i class="fas fa-mobile-alt" style="color: var(--primary-blue);" title="تم الإضافة من التطبيق المحمول"></i>' : 
+                                '<i class="fas fa-desktop" style="color: var(--gray);" title="تم الإضافة من التطبيق الرئيسي"></i>'
+                            }
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn view" onclick="viewDeduction(${deductionId})" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn edit" onclick="editDeduction(${deductionId})" title="تحرير">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="confirmDeleteDeduction(${deductionId})" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                     `;
-                } else {
-                    tbody.innerHTML = dataManager.filteredDeductions.map(deduction => {
-                        // Handle different ID formats for onclick events
-                        const deductionId = typeof deduction.id === 'string' ? `'${deduction.id}'` : deduction.id;
-                        
-                        return `
-                        <tr>
-                            <td><strong>${deduction.plaintiffName}</strong></td>
-                            <td style="color: var(--primary-blue); font-weight: 600;">${deduction.caseNumber}</td>
-                            <td style="color: var(--success-green); font-weight: 700;">${dataManager.formatNumber(deduction.amount)} د.ع</td>
-                            <td>${dataManager.formatDate(deduction.date)}</td>
-                            <td>${deduction.source}</td>
-                            <td>
-                                <span class="status-badge" style="background: var(--success-green-light); color: var(--success-green);">
-                                    <i class="fas fa-check-circle" style="font-size: 0.75rem;"></i>
-                                    ${deduction.status}
-                                </span>
-                            </td>
-                            <td>
-                                ${deduction.addedVia === 'mobile_app' ? 
-                                    '<i class="fas fa-mobile-alt" style="color: var(--primary-blue);" title="تم الإضافة من التطبيق المحمول"></i>' : 
-                                    '<i class="fas fa-desktop" style="color: var(--gray);" title="تم الإضافة من التطبيق الرئيسي"></i>'
-                                }
-                            </td>
-                            <td>
-                                <div class="actions">
-                                    <button class="action-btn view" onclick="viewDeduction(${deductionId})" title="عرض">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="action-btn edit" onclick="editDeduction(${deductionId})" title="تحرير">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete" onclick="confirmDeleteDeduction(${deductionId})" title="حذف">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        `;
-                    }).join('');
-                }
-            });
+                }).join('');
+            }
 
             updateDeductionStats();
         }
@@ -15828,8 +15141,7 @@ function renderNotifications() {
         plaintiffPhone: document.getElementById('new-case-plaintiff-phone')?.value?.trim() || '',
         plaintiffAddress: document.getElementById('new-case-plaintiff-address')?.value?.trim() || '',
         defendantName: document.getElementById('new-case-defendant-name')?.value?.trim() || '',
-    defendantPhone: document.getElementById('new-case-defendant-phone')?.value?.trim() || '',
-    defendantAddress: document.getElementById('new-case-defendant-address')?.value?.trim() || '',
+        defendantAddress: document.getElementById('new-case-defendant-address')?.value?.trim() || '',
         lawyerName: document.getElementById('new-case-lawyer-name')?.value?.trim() || '',
         courtName: document.getElementById('new-case-court-name')?.value?.trim() || '',
         courtSection: document.getElementById('new-case-court-section')?.value?.trim() || '',
@@ -15917,25 +15229,6 @@ function renderNotifications() {
     showNotification('نجح الحفظ', `تم إضافة الدعوى ${caseData.caseNumber} بنجاح`, 'success');
     
     clearNewCaseForm();
-    // إرسال رسالة واتساب للمدعى عليه
-    if (caseData.defendantPhone) {
-        // تحقق من صحة الرقم
-        const phone = caseData.defendantPhone.replace(/[^\d+]/g, '');
-        if (phone.length >= 10) {
-            const amountText = caseData.amount ? `المبلغ المالي المطلوب: ${caseData.amount.toLocaleString('ar-EG', { style: 'currency', currency: 'IQD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}.` : '';
-            const message = encodeURIComponent(
-                `تنبيه هام:
-نود إعلامك بأنه تم رفع دعوى قضائية ضدك رقم ${caseData.caseNumber} باسمك (${caseData.defendantName}).
-${amountText}
-يرجى زيارة الشركة في أقرب وقت ممكن لإبلاغنا باستلام هذا التنبيه ولمناقشة التفاصيل قبل اتخاذ أي إجراءات قانونية بحقك.
-للاستفسار أو التواصل يرجى الرد على هذه الرسالة.`
-            );
-            const waUrl = `https://wa.me/${phone}?text=${message}`;
-            window.open(waUrl, '_blank');
-        } else {
-            showNotification('تنبيه', 'رقم هاتف المدعى عليه غير صالح لإرسال رسالة واتساب.', 'warning');
-        }
-    }
 }
 
         function saveNewDefendant() {
@@ -16377,21 +15670,17 @@ ${amountText}
 
         function renderCaseTimeline() {
             const container = document.getElementById('case-timeline');
-            if (Array.isArray(dataManager.currentCase.timeline)) {
-                container.innerHTML = dataManager.currentCase.timeline.map(item => `
-                    <div class="timeline-item ${item.type}">
-                        <div class="timeline-title">
-                            <i class="fas fa-${item.type === 'blue' ? 'file' : item.type === 'yellow' ? 'gavel' : 'money-bill'}"></i>
-                            ${item.title}
-                        </div>
-                        <div class="timeline-desc">
-                            ${dataManager.formatDate(item.date)} - ${item.desc}
-                        </div>
+            container.innerHTML = dataManager.currentCase.timeline.map(item => `
+                <div class="timeline-item ${item.type}">
+                    <div class="timeline-title">
+                        <i class="fas fa-${item.type === 'blue' ? 'file' : item.type === 'yellow' ? 'gavel' : 'money-bill'}"></i>
+                        ${item.title}
                     </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<div class="timeline-empty">لا توجد بيانات للجدول الزمني لهذه الدعوى.</div>';
-            }
+                    <div class="timeline-desc">
+                        ${dataManager.formatDate(item.date)} - ${item.desc}
+                    </div>
+                </div>
+            `).join('');
         }
 
         function renderCaseDeductions() {
@@ -20386,25 +19675,25 @@ function updateCase(id) {
         const defaultTemplates = {
             lawsuit: {
                 name: 'دعوى مطالبة بدين',
-                content: `المدعي / المهندس / المحاسب
-{plaintiff_name}
-المدعى عليه: حسين كاظم علوان يسكن النجف الأشرف
+                content: `**المدعي / المهندس / المحاسب**
+**{plaintiff_name}**
+**المدعى عليه: حسين كاظم علوان يسكن النجف الأشرف**
 
-جهة الدعوى:
+**جهة الدعوى:**
 
-لموكلي بذمة المدعى عليه مبلغ قدره {debt_amount} دينار ورغم المطالبة المستمرة بالتسديد إلا أنه ممتنع، لذا أطلب من محكمتكم الموقرة دعوة المدعى عليه للمرافعة والحكم بإلزامه بتسديد المبلغ المذكور أعلاه وتحميله كافة الرسوم والمصاريف وأتعاب المحاماة.
+لموكلي بذمة المدعى عليه مبلغ قدره **{debt_amount}** دينار ورغم المطالبة المستمرة بالتسديد إلا أنه ممتنع، لذا أطلب من محكمتكم الموقرة دعوة المدعى عليــــــه للمرافعة والحكم بإلزامه بتسديد المبلغ المذكور أعلاه وتحميله كافة الرسوم والمصاريف وأتــــعــــاب المحاماة.
 
 ولكم فائق الشكر والتقدير
 
-الأدلة الثبوتية:
+**الأدلة الثبوتية:**
 {evidence}
 
-سائر البيانات القانونية
+**سائر البيانات القانونية**
 
 
-المحامي / {lawyer_name}
-وكيل المدعي
-{client_name}`
+**المحامي / {lawyer_name}**
+**وكيل المدعي**
+**{client_name}**`
             },
             appeal: {
                 name: 'استئناف حكم',
@@ -21643,836 +20932,6 @@ ________________
                     }, 800);
                 }
             }, HIDE_DELAY);
-        });
-
-        // ========================================
-        // ENHANCED FUNCTIONS - الوظائف المحسّنة
-        // ========================================
-
-        // Enhanced Statistics Manager
-        class EnhancedStatsManager {
-            constructor() {
-                this.stats = {
-                    totalCases: 0,
-                    activeCases: 0,
-                    closedCases: 0,
-                    totalAmount: 0,
-                    paidAmount: 0,
-                    pendingAmount: 0,
-                    thisMonth: 0,
-                    thisWeek: 0
-                };
-                this.charts = {};
-            }
-
-            calculateStats(casesData) {
-                this.stats = {
-                    totalCases: casesData.length,
-                    activeCases: casesData.filter(c => c.status !== 'مغلق').length,
-                    closedCases: casesData.filter(c => c.status === 'مغلق').length,
-                    totalAmount: casesData.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0),
-                    paidAmount: casesData.reduce((sum, c) => sum + (parseFloat(c.paidAmount) || 0), 0),
-                    pendingAmount: 0,
-                    thisMonth: this.getThisMonthCases(casesData),
-                    thisWeek: this.getThisWeekCases(casesData)
-                };
-                this.stats.pendingAmount = this.stats.totalAmount - this.stats.paidAmount;
-                return this.stats;
-            }
-
-            getThisMonthCases(casesData) {
-                const now = new Date();
-                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-                return casesData.filter(c => {
-                    const caseDate = new Date(c.createdAt || c.date);
-                    return caseDate >= firstDay;
-                }).length;
-            }
-
-            getThisWeekCases(casesData) {
-                const now = new Date();
-                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                return casesData.filter(c => {
-                    const caseDate = new Date(c.createdAt || c.date);
-                    return caseDate >= weekAgo;
-                }).length;
-            }
-
-            createCasesChart(canvasId, casesData) {
-                const ctx = document.getElementById(canvasId);
-                if (!ctx) return;
-
-                const statusCounts = {};
-                casesData.forEach(c => {
-                    statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
-                });
-
-                if (this.charts[canvasId]) {
-                    this.charts[canvasId].destroy();
-                }
-
-                this.charts[canvasId] = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(statusCounts),
-                        datasets: [{
-                            data: Object.values(statusCounts),
-                            backgroundColor: [
-                                '#3b82f6', '#10b981', '#f59e0b', 
-                                '#ef4444', '#8b5cf6', '#06b6d4'
-                            ],
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 15,
-                                    font: {
-                                        size: 12,
-                                        family: 'Segoe UI'
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                titleFont: {
-                                    size: 14
-                                },
-                                bodyFont: {
-                                    size: 13
-                                },
-                                borderColor: 'rgba(255, 255, 255, 0.1)',
-                                borderWidth: 1
-                            }
-                        }
-                    }
-                });
-            }
-
-            createMonthlyChart(canvasId, casesData) {
-                const ctx = document.getElementById(canvasId);
-                if (!ctx) return;
-
-                const monthlyData = this.getMonthlyData(casesData);
-
-                if (this.charts[canvasId]) {
-                    this.charts[canvasId].destroy();
-                }
-
-                this.charts[canvasId] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: monthlyData.labels,
-                        datasets: [{
-                            label: 'عدد القضايا',
-                            data: monthlyData.data,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 6,
-                            pointHoverRadius: 8,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#3b82f6',
-                            pointBorderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                titleFont: {
-                                    size: 14
-                                },
-                                bodyFont: {
-                                    size: 13
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                },
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            getMonthlyData(casesData) {
-                const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-                              'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-                const monthlyCounts = new Array(12).fill(0);
-
-                casesData.forEach(c => {
-                    const date = new Date(c.createdAt || c.date);
-                    const month = date.getMonth();
-                    monthlyCounts[month]++;
-                });
-
-                return {
-                    labels: months,
-                    data: monthlyCounts
-                };
-            }
-
-            createAmountChart(canvasId, casesData) {
-                const ctx = document.getElementById(canvasId);
-                if (!ctx) return;
-
-                const totalAmount = casesData.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
-                const paidAmount = casesData.reduce((sum, c) => sum + (parseFloat(c.paidAmount) || 0), 0);
-                const pendingAmount = totalAmount - paidAmount;
-
-                if (this.charts[canvasId]) {
-                    this.charts[canvasId].destroy();
-                }
-
-                this.charts[canvasId] = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['المبلغ الكلي', 'المبلغ المدفوع', 'المبلغ المتبقي'],
-                        datasets: [{
-                            label: 'المبالغ بالدينار العراقي',
-                            data: [totalAmount, paidAmount, pendingAmount],
-                            backgroundColor: [
-                                'rgba(59, 130, 246, 0.8)',
-                                'rgba(16, 185, 129, 0.8)',
-                                'rgba(245, 158, 11, 0.8)'
-                            ],
-                            borderColor: [
-                                '#3b82f6',
-                                '#10b981',
-                                '#f59e0b'
-                            ],
-                            borderWidth: 2,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y.toLocaleString('ar-EG') + ' د.ع';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString('ar-EG');
-                                    }
-                                },
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Initialize Enhanced Stats Manager
-        window.enhancedStatsManager = new EnhancedStatsManager();
-
-        // Enhanced Export Functions
-        class ExportManager {
-            exportToExcel(data, filename = 'legal-data.xlsx') {
-                try {
-                    const ws = XLSX.utils.json_to_sheet(data);
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, 'Data');
-                    
-                    // Apply styling
-                    const range = XLSX.utils.decode_range(ws['!ref']);
-                    for (let R = range.s.r; R <= range.e.r; ++R) {
-                        for (let C = range.s.c; C <= range.e.c; ++C) {
-                            const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-                            if (!ws[cellAddress]) continue;
-                            
-                            if (R === 0) {
-                                ws[cellAddress].s = {
-                                    font: { bold: true },
-                                    fill: { fgColor: { rgb: "3B82F6" } },
-                                    alignment: { horizontal: "center" }
-                                };
-                            }
-                        }
-                    }
-                    
-                    XLSX.writeFile(wb, filename);
-                    this.showSuccessNotification('تم تصدير البيانات بنجاح إلى Excel');
-                } catch (error) {
-                    console.error('Error exporting to Excel:', error);
-                    this.showErrorNotification('حدث خطأ أثناء تصدير البيانات');
-                }
-            }
-
-            async exportToPDF(elementId, filename = 'legal-document.pdf') {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-
-                    const element = document.getElementById(elementId);
-                    if (!element) {
-                        throw new Error('Element not found');
-                    }
-
-                    // Use html2canvas to convert element to image
-                    const canvas = await html2canvas(element);
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    const imgWidth = 210;
-                    const pageHeight = 297;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    let heightLeft = imgHeight;
-                    let position = 0;
-
-                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        doc.addPage();
-                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-
-                    doc.save(filename);
-                    this.showSuccessNotification('تم تصدير المستند بنجاح إلى PDF');
-                } catch (error) {
-                    console.error('Error exporting to PDF:', error);
-                    this.showErrorNotification('حدث خطأ أثناء تصدير المستند');
-                }
-            }
-
-            showSuccessNotification(message) {
-                if (typeof showNotification === 'function') {
-                    showNotification('نجاح', message, 'success');
-                }
-            }
-
-            showErrorNotification(message) {
-                if (typeof showNotification === 'function') {
-                    showNotification('خطأ', message, 'error');
-                }
-            }
-        }
-
-        // Initialize Export Manager
-        window.exportManager = new ExportManager();
-
-        // Enhanced Theme Manager
-        class ThemeManager {
-            constructor() {
-                this.currentTheme = localStorage.getItem('app-theme') || 'light';
-                this.applyTheme(this.currentTheme);
-            }
-
-            toggleTheme() {
-                this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-                this.applyTheme(this.currentTheme);
-                localStorage.setItem('app-theme', this.currentTheme);
-                this.updateThemeIcon();
-            }
-
-            applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-            }
-
-            updateThemeIcon() {
-                const themeIcon = document.querySelector('.theme-icon');
-                if (themeIcon) {
-                    themeIcon.className = this.currentTheme === 'dark' ? 
-                        'fas fa-sun theme-icon' : 'fas fa-moon theme-icon';
-                }
-            }
-
-            getCurrentTheme() {
-                return this.currentTheme;
-            }
-        }
-
-        // Initialize Theme Manager
-        window.themeManager = new ThemeManager();
-
-        // Enhanced Search Manager
-        class SearchManager {
-            constructor() {
-                this.searchIndex = [];
-                this.searchResults = [];
-            }
-
-            buildSearchIndex(data) {
-                this.searchIndex = data.map(item => ({
-                    ...item,
-                    searchText: this.buildSearchText(item)
-                }));
-            }
-
-            buildSearchText(item) {
-                return Object.values(item)
-                    .filter(val => val !== null && val !== undefined)
-                    .join(' ')
-                    .toLowerCase();
-            }
-
-            search(query, filters = {}) {
-                if (!query || query.trim() === '') {
-                    return this.searchIndex;
-                }
-
-                const searchTerms = query.toLowerCase().trim().split(' ');
-                
-                this.searchResults = this.searchIndex.filter(item => {
-                    const matchesSearch = searchTerms.every(term => 
-                        item.searchText.includes(term)
-                    );
-
-                    const matchesFilters = Object.entries(filters).every(([key, value]) => {
-                        if (!value || value === 'الكل') return true;
-                        return item[key] === value;
-                    });
-
-                    return matchesSearch && matchesFilters;
-                });
-
-                return this.searchResults;
-            }
-
-            highlightSearchTerms(text, query) {
-                if (!query || !text) return text;
-                
-                const terms = query.toLowerCase().split(' ');
-                let highlightedText = text;
-                
-                terms.forEach(term => {
-                    const regex = new RegExp(`(${term})`, 'gi');
-                    highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
-                });
-                
-                return highlightedText;
-            }
-        }
-
-        // Initialize Search Manager
-        window.searchManager = new SearchManager();
-
-        // Ripple Effect Function
-        function createRipple(event) {
-            const button = event.currentTarget;
-            const ripple = document.createElement('span');
-            
-            const diameter = Math.max(button.clientWidth, button.clientHeight);
-            const radius = diameter / 2;
-
-            ripple.style.width = ripple.style.height = `${diameter}px`;
-            ripple.style.left = `${event.clientX - button.offsetLeft - radius}px`;
-            ripple.style.top = `${event.clientY - button.offsetTop - radius}px`;
-            ripple.classList.add('ripple');
-
-            const existingRipple = button.getElementsByClassName('ripple')[0];
-            if (existingRipple) {
-                existingRipple.remove();
-            }
-
-            button.appendChild(ripple);
-        }
-
-        // Add ripple effect to buttons
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.btn, .ripple-container').forEach(button => {
-                button.addEventListener('click', createRipple);
-            });
-        });
-
-        // Enhanced Notification System
-        function showEnhancedNotification(title, message, type = 'info', duration = 3000) {
-            if (typeof Swal !== 'undefined') {
-                const icons = {
-                    success: 'success',
-                    error: 'error',
-                    warning: 'warning',
-                    info: 'info'
-                };
-
-                Swal.fire({
-                    icon: icons[type] || 'info',
-                    title: title,
-                    text: message,
-                    timer: duration,
-                    timerProgressBar: true,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
-                    background: type === 'success' ? '#d1fae5' : 
-                               type === 'error' ? '#fee2e2' :
-                               type === 'warning' ? '#fef3c7' : '#dbeafe',
-                    iconColor: type === 'success' ? '#10b981' :
-                              type === 'error' ? '#ef4444' :
-                              type === 'warning' ? '#f59e0b' : '#3b82f6',
-                    customClass: {
-                        popup: 'animated fadeInDown'
-                    }
-                });
-            } else {
-                // Fallback to standard notification
-                if (typeof showNotification === 'function') {
-                    showNotification(title, message, type);
-                }
-            }
-        }
-
-        // Utility Functions
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        function throttle(func, limit) {
-            let inThrottle;
-            return function() {
-                const args = arguments;
-                const context = this;
-                if (!inThrottle) {
-                    func.apply(context, args);
-                    inThrottle = true;
-                    setTimeout(() => inThrottle = false, limit);
-                }
-            };
-        }
-
-        function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showEnhancedNotification('نجاح', 'تم نسخ النص بنجاح', 'success');
-                }).catch(err => {
-                    console.error('Failed to copy:', err);
-                    fallbackCopyToClipboard(text);
-                });
-            } else {
-                fallbackCopyToClipboard(text);
-            }
-        }
-
-        function fallbackCopyToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                document.execCommand('copy');
-                showEnhancedNotification('نجاح', 'تم نسخ النص بنجاح', 'success');
-            } catch (err) {
-                console.error('Failed to copy:', err);
-                showEnhancedNotification('خطأ', 'فشل نسخ النص', 'error');
-            }
-
-            document.body.removeChild(textArea);
-        }
-
-        // Format Numbers
-        function formatNumber(num) {
-            if (typeof num !== 'number') return num;
-            return num.toLocaleString('ar-EG');
-        }
-
-        // Format Currency
-        function formatCurrencyEnhanced(amount) {
-            if (typeof amount !== 'number' || isNaN(amount)) return '0 د.ع';
-            return amount.toLocaleString('ar-EG', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }) + ' د.ع';
-        }
-
-        // Date Formatting
-        function formatDateArabic(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            return d.toLocaleDateString('ar-EG', options);
-        }
-
-        function getRelativeTime(date) {
-            if (!date) return '';
-            
-            const now = new Date();
-            const past = new Date(date);
-            const diffInSeconds = Math.floor((now - past) / 1000);
-
-            if (diffInSeconds < 60) return 'الآن';
-            if (diffInSeconds < 3600) return `منذ ${Math.floor(diffInSeconds / 60)} دقيقة`;
-            if (diffInSeconds < 86400) return `منذ ${Math.floor(diffInSeconds / 3600)} ساعة`;
-            if (diffInSeconds < 604800) return `منذ ${Math.floor(diffInSeconds / 86400)} يوم`;
-            if (diffInSeconds < 2592000) return `منذ ${Math.floor(diffInSeconds / 604800)} أسبوع`;
-            if (diffInSeconds < 31536000) return `منذ ${Math.floor(diffInSeconds / 2592000)} شهر`;
-            return `منذ ${Math.floor(diffInSeconds / 31536000)} سنة`;
-        }
-
-        // Smooth Scroll
-        function smoothScrollTo(elementId, offset = 0) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - offset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-            }
-        }
-
-        // Loading Overlay
-        function showLoadingOverlay(message = 'جاري التحميل...') {
-            const overlay = document.createElement('div');
-            overlay.id = 'loading-overlay';
-            overlay.style.cssText = `
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-                backdrop-filter: blur(5px);
-            `;
-
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: white;
-                padding: 2rem 3rem;
-                border-radius: 1rem;
-                text-align: center;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-            `;
-
-            const spinner = document.createElement('div');
-            spinner.style.cssText = `
-                width: 50px;
-                height: 50px;
-                border: 4px solid #e5e7eb;
-                border-top-color: #3b82f6;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 1rem;
-            `;
-
-            const text = document.createElement('p');
-            text.textContent = message;
-            text.style.cssText = `
-                color: #374151;
-                font-size: 1rem;
-                margin: 0;
-            `;
-
-            content.appendChild(spinner);
-            content.appendChild(text);
-            overlay.appendChild(content);
-            document.body.appendChild(overlay);
-
-            return overlay;
-        }
-
-        function hideLoadingOverlay() {
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
-
-        // Print Function
-        function printElement(elementId) {
-            const element = document.getElementById(elementId);
-            if (!element) {
-                showEnhancedNotification('خطأ', 'العنصر المطلوب غير موجود', 'error');
-                return;
-            }
-
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html dir="rtl" lang="ar">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>طباعة</title>
-                    <style>
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }
-                        @media print {
-                            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${element.innerHTML}
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            window.onafterprint = function() {
-                                window.close();
-                            };
-                        };
-                    </script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-        }
-
-        // Show Export Menu
-        function showExportMenu() {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'تصدير البيانات',
-                    html: `
-                        <div style="text-align: center; padding: 1rem;">
-                            <button onclick="exportCurrentData('excel')" class="swal2-confirm swal2-styled" style="margin: 0.5rem;">
-                                <i class="fas fa-file-excel"></i> تصدير إلى Excel
-                            </button>
-                            <br>
-                            <button onclick="exportCurrentData('pdf')" class="swal2-confirm swal2-styled" style="margin: 0.5rem; background-color: #ef4444;">
-                                <i class="fas fa-file-pdf"></i> تصدير إلى PDF
-                            </button>
-                            <br>
-                            <button onclick="exportCurrentData('print')" class="swal2-confirm swal2-styled" style="margin: 0.5rem; background-color: #8b5cf6;">
-                                <i class="fas fa-print"></i> طباعة
-                            </button>
-                        </div>
-                    `,
-                    showConfirmButton: false,
-                    showCloseButton: true,
-                    customClass: {
-                        popup: 'animated fadeInDown'
-                    }
-                });
-            } else {
-                alert('اختر طريقة التصدير:\n1. Excel\n2. PDF\n3. طباعة');
-            }
-        }
-
-        // Export Current Data
-        function exportCurrentData(format) {
-            const currentTab = document.querySelector('.nav-tab.active');
-            if (!currentTab) return;
-
-            const tabName = currentTab.dataset.tab;
-            
-            switch (format) {
-                case 'excel':
-                    if (tabName === 'dashboard' || tabName === 'cases') {
-                        const cases = dataManager.casesData || [];
-                        exportManager.exportToExcel(cases, 'cases-data.xlsx');
-                    }
-                    break;
-                case 'pdf':
-                    const contentElement = document.querySelector('.content-section:not(.hidden)');
-                    if (contentElement) {
-                        exportManager.exportToPDF(contentElement.id, 'document.pdf');
-                    }
-                    break;
-                case 'print':
-                    window.print();
-                    break;
-            }
-            
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-            }
-        }
-
-        // Initialize Enhanced Features on Load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize theme
-            if (window.themeManager) {
-                window.themeManager.updateThemeIcon();
-            }
-
-            // Add ripple effect to all buttons
-            document.querySelectorAll('.btn, .action-btn, .ripple-container').forEach(button => {
-                if (!button.classList.contains('no-ripple')) {
-                    button.addEventListener('click', createRipple);
-                }
-            });
-
-            // Initialize tooltips
-            document.querySelectorAll('[data-tooltip]').forEach(element => {
-                element.classList.add('tooltip-enhanced');
-            });
-
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        smoothScrollTo(target.id, 80);
-                    }
-                });
-            });
         });
         
     </script>

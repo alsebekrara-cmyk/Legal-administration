@@ -1,0 +1,1624 @@
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق الإدارة القانونية</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        /* ==================== المتغيرات العامة ==================== */
+        :root {
+            --primary-blue: #6366f1;
+            --indigo: #4f46e5;
+            --purple: #8b5cf6;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --error-red: #ef4444;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ==================== إعادة تعيين الأنماط ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==================== التخطيط الرئيسي ==================== */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        /* ==================== الشريط الجانبي ==================== */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            margin-bottom: 8px;
+        }
+
+        .menu-item button {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: right;
+        }
+
+        .menu-item button i {
+            width: 20px;
+            font-size: 18px;
+        }
+
+        .menu-item button:hover,
+        .menu-item button.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        /* ==================== المحتوى الرئيسي ==================== */
+        .main-content {
+            flex: 1;
+            background: var(--bg-light);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* الهيدر العلوي */
+        .top-header {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: var(--bg-light);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--text-gray);
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: var(--primary-blue);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: var(--error-red);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            display: none;
+        }
+
+        .notification-badge.active {
+            display: flex;
+        }
+
+        /* محتوى الصفحة */
+        .page-content {
+            padding: 30px 40px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ==================== البطاقات ==================== */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* ==================== الأزرار ==================== */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--indigo);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--text-gray);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-yellow);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error-red);
+            color: white;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        /* ==================== شبكة الإحصائيات ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-blue), var(--purple));
+            color: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        .stat-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 50px;
+            opacity: 0.2;
+        }
+
+        /* ==================== الجداول ==================== */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-light);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        td {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* ==================== النماذج ==================== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ==================== النوافذ المنبثقة ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 22px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--text-gray);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--bg-light);
+            color: var(--error-red);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ==================== الشارات ==================== */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-draft { background: #cbd5e1; color: #475569; }
+        .badge-filed { background: #dbeafe; color: #1e40af; }
+        .badge-in-court { background: #fef3c7; color: #92400e; }
+        .badge-judgment { background: #d1fae5; color: #065f46; }
+        .badge-execution { background: #e0e7ff; color: #3730a3; }
+        .badge-closed { background: #f3f4f6; color: #374151; }
+
+        .badge-normal { background: #e0f2fe; color: #0369a1; }
+        .badge-important { background: #fef3c7; color: #92400e; }
+        .badge-urgent { background: #fed7aa; color: #9a3412; }
+        .badge-emergency { background: #fecaca; color: #991b1b; }
+
+        /* ==================== البحث والتصفية ==================== */
+        .search-filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* ==================== لوحة الإشعارات ==================== */
+        .notifications-panel {
+            position: fixed;
+            top: 80px;
+            left: 40px;
+            width: 400px;
+            max-height: 600px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            display: none;
+            z-index: 999;
+        }
+
+        .notifications-panel.active {
+            display: block;
+            animation: slideInLeft 0.3s ease;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notifications-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notifications-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .notifications-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: var(--bg-light);
+        }
+
+        .notification-item.unread {
+            background: rgba(99, 102, 241, 0.05);
+            border-right: 3px solid var(--primary-blue);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        /* ==================== التحميل ==================== */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==================== Toast Notifications ==================== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            z-index: 9999;
+            animation: slideInUp 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success { border-right: 4px solid var(--success-green); }
+        .toast.error { border-right: 4px solid var(--error-red); }
+        .toast.warning { border-right: 4px solid var(--warning-yellow); }
+        .toast.info { border-right: 4px solid var(--primary-blue); }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                right: -280px;
+                height: 100%;
+                z-index: 1001;
+            }
+
+            .sidebar.active {
+                transform: translateX(-280px);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 15px 20px;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .notifications-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+            }
+        }
+
+        /* ==================== أنماط خاصة ==================== */
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+        }
+
+        .whatsapp-btn:hover {
+            background: #20BA5A;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* تحسينات إضافية */
+        .section-divider {
+            margin: 30px 0;
+            border: none;
+            height: 2px;
+            background: linear-gradient(to left, transparent, var(--border-color), transparent);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            border-right: 4px solid var(--primary-blue);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .info-box i {
+            color: var(--primary-blue);
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+     <!-- Application Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>الإدارة القانونية</h2>
+                <p>مجموعة السيد أسامة القانونية</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <button class="nav-btn active" data-page="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>لوحة التحكم</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="cases">
+                        <i class="fas fa-gavel"></i>
+                        <span>الدعاوى</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="defendants">
+                        <i class="fas fa-users"></i>
+                        <span>المدعى عليهم</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="lawyers">
+                        <i class="fas fa-user-tie"></i>
+                        <span>المحامين</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="deductions">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>الاستقطاعات</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="templates">
+                        <i class="fas fa-file-alt"></i>
+                        <span>القوالب</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="chat">
+                        <i class="fas fa-comments"></i>
+                        <span>الدردشة</span>
+                        <span class="badge badge-important" id="chat-badge" style="margin-right: auto; display: none;">0</span>
+                    </button>
+                </li>
+                <li class="menu-item">
+                    <button class="nav-btn" data-page="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">لوحة التحكم</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="showNewCaseModal()">
+                        <i class="fas fa-plus"></i>
+                        دعوى جديدة
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-gavel stat-icon"></i>
+                            <div class="stat-content">
+                                <div class="stat-label">إجمالي الدعاوى</div>
+                                <div class="stat-value" id="stat-total-cases">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #dc2626);">
+                            <i class="fas fa-hourglass-half stat-icon"></i>
+                            <div class="stat-content">
+                                <div class="stat-label">الدعاوى المعلقة</div>
+                                <div class="stat-value" id="stat-pending-cases">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-check-circle stat-icon"></i>
+                            <div class="stat-content">
+                                <div class="stat-label">الدعاوى المكتملة</div>
+                                <div class="stat-value" id="stat-completed-cases">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            <i class="fas fa-coins stat-icon"></i>
+                            <div class="stat-content">
+                                <div class="stat-label">إجمالي المبالغ</div>
+                                <div class="stat-value" id="stat-total-amount">0 IQD</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Cases -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">الدعاوى الأخيرة</h3>
+                            <button class="btn btn-primary btn-icon" onclick="navigateTo('cases')">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>رقم الدعوى</th>
+                                        <th>المدعي</th>
+                                        <th>المدعى عليه</th>
+                                        <th>الحالة</th>
+                                        <th>المبلغ</th>
+                                        <th>الجلسة القادمة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-cases-table">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="fas fa-inbox"></i>
+                                            <h3>لا توجد دعاوى حالياً</h3>
+                                            <p>ابدأ بإضافة دعوى جديدة</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Hearings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">الجلسات القادمة</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>رقم الدعوى</th>
+                                        <th>المدعي</th>
+                                        <th>المحامي</th>
+                                        <th>التاريخ</th>
+                                        <th>الوقت</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="upcoming-hearings-table">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <h3>لا توجد جلسات مجدولة</h3>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cases Page -->
+                <div id="cases-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">جميع الدعاوى</h3>
+                            <button class="btn btn-primary" onclick="showNewCaseModal()">
+                                <i class="fas fa-plus"></i>
+                                دعوى جديدة
+                            </button>
+                        </div>
+
+                        <!-- Search and Filter -->
+                        <div class="search-filter-bar">
+                            <div class="search-box">
+                                <input type="text" id="cases-search" placeholder="البحث عن دعوى..." onkeyup="searchCases()">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <select class="filter-select" id="cases-status-filter" onchange="filterCases()">
+                                <option value="">جميع الحالات</option>
+                                <option value="مسودة">مسودة</option>
+                                <option value="مرفوع">مرفوع</option>
+                                <option value="في المحكمة">في المحكمة</option>
+                                <option value="صدور حكم">صدور حكم</option>
+                                <option value="تنفيذ">تنفيذ</option>
+                                <option value="مغلق">مغلق</option>
+                            </select>
+                            <select class="filter-select" id="cases-priority-filter" onchange="filterCases()">
+                                <option value="">جميع الأولويات</option>
+                                <option value="عادية">عادية</option>
+                                <option value="مهمة">مهمة</option>
+                                <option value="عاجلة">عاجلة</option>
+                                <option value="طارئة">طارئة</option>
+                            </select>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>رقم الدعوى</th>
+                                        <th>المدعي</th>
+                                        <th>المدعى عليه</th>
+                                        <th>المحامي</th>
+                                        <th>الحالة</th>
+                                        <th>الأولوية</th>
+                                        <th>المبلغ</th>
+                                        <th>المتبقي</th>
+                                        <th>الجلسة القادمة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cases-table">
+                                    <tr>
+                                        <td colspan="10" class="empty-state">
+                                            <i class="fas fa-inbox"></i>
+                                            <h3>لا توجد دعاوى</h3>
+                                            <p>ابدأ بإضافة دعوى جديدة من الزر أعلاه</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Defendants Page -->
+                <div id="defendants-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">المدعى عليهم</h3>
+                            <button class="btn btn-primary" onclick="showNewDefendantModal()">
+                                <i class="fas fa-plus"></i>
+                                مدعى عليه جديد
+                            </button>
+                        </div>
+
+                        <div class="search-filter-bar">
+                            <div class="search-box">
+                                <input type="text" id="defendants-search" placeholder="البحث عن مدعى عليه..." onkeyup="searchDefendants()">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الهاتف</th>
+                                        <th>البريد الإلكتروني</th>
+                                        <th>جهة العمل</th>
+                                        <th>العنوان</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="defendants-table">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="fas fa-users"></i>
+                                            <h3>لا يوجد مدعى عليهم</h3>
+                                            <p>ابدأ بإضافة مدعى عليه جديد</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lawyers Page -->
+                <div id="lawyers-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">المحامين</h3>
+                            <button class="btn btn-primary" onclick="showNewLawyerModal()">
+                                <i class="fas fa-plus"></i>
+                                محامي جديد
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>رقم الترخيص</th>
+                                        <th>الهاتف</th>
+                                        <th>التخصص</th>
+                                        <th>سنوات الخبرة</th>
+                                        <th>عدد الدعاوى</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lawyers-table">
+                                    <tr>
+                                        <td colspan="7" class="empty-state">
+                                            <i class="fas fa-user-tie"></i>
+                                            <h3>لا يوجد محامين</h3>
+                                            <p>ابدأ بإضافة محامي جديد</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deductions Page -->
+                <div id="deductions-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">الاستقطاعات</h3>
+                            <button class="btn btn-primary" onclick="showNewDeductionModal()">
+                                <i class="fas fa-plus"></i>
+                                استقطاع جديد
+                            </button>
+                        </div>
+
+                        <div class="stats-grid" style="margin-bottom: 20px;">
+                            <div class="stat-card">
+                                <div class="stat-content">
+                                    <div class="stat-label">إجمالي الاستقطاعات</div>
+                                    <div class="stat-value" id="stat-total-deductions">0 IQD</div>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <div class="stat-content">
+                                    <div class="stat-label">عدد الاستقطاعات</div>
+                                    <div class="stat-value" id="stat-deductions-count">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>رقم الدعوى</th>
+                                        <th>المبلغ المستقطع</th>
+                                        <th>التاريخ</th>
+                                        <th>الطريقة</th>
+                                        <th>الملاحظات</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deductions-table">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            <h3>لا توجد استقطاعات</h3>
+                                            <p>ابدأ بإضافة استقطاع جديد</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Page -->
+                <div id="templates-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">قوالب الوثائق</h3>
+                            <button class="btn btn-primary" onclick="showNewTemplateModal()">
+                                <i class="fas fa-plus"></i>
+                                قالب جديد
+                            </button>
+                        </div>
+
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            قم بإنشاء قوالب للوثائق القانونية الشائعة لتوفير الوقت
+                        </div>
+
+                        <div id="templates-list">
+                            <div class="empty-state">
+                                <i class="fas fa-file-alt"></i>
+                                <h3>لا توجد قوالب</h3>
+                                <p>ابدأ بإنشاء قالب جديد</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Page -->
+                <div id="chat-page" class="page">
+                    <div class="card" style="height: calc(100vh - 200px);">
+                        <div class="card-header">
+                            <h3 class="card-title">الدردشة مع المحامين</h3>
+                        </div>
+                        <div style="display: flex; height: calc(100% - 80px);">
+                            <!-- Lawyers List -->
+                            <div style="width: 300px; border-left: 2px solid var(--border-color); overflow-y: auto;">
+                                <div id="lawyers-chat-list">
+                                    <div class="empty-state">
+                                        <i class="fas fa-comments"></i>
+                                        <h3>لا يوجد محامين</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Chat Area -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-light);">
+                                    <div class="empty-state">
+                                        <i class="fas fa-comment-dots"></i>
+                                        <h3>اختر محامي لبدء الدردشة</h3>
+                                    </div>
+                                </div>
+                                <div style="padding: 20px; border-top: 2px solid var(--border-color); display: none;" id="chat-input-area">
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="chat-message-input" placeholder="اكتب رسالة..." style="flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: 10px;">
+                                        <button class="btn btn-primary" onclick="sendChatMessage()">
+                                            <i class="fas fa-paper-plane"></i>
+                                            إرسال
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">الإعدادات</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <button class="btn btn-primary" style="width: 100%;" onclick="backupData()">
+                                    <i class="fas fa-download"></i>
+                                    نسخ احتياطي للبيانات
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-secondary" style="width: 100%;" onclick="restoreData()">
+                                    <i class="fas fa-upload"></i>
+                                    استعادة البيانات
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-success" style="width: 100%;" onclick="exportData()">
+                                    <i class="fas fa-file-export"></i>
+                                    تصدير البيانات
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-warning" style="width: 100%;" onclick="generateReport()">
+                                    <i class="fas fa-file-pdf"></i>
+                                    تقرير شامل
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <h3 style="margin-bottom: 20px;">معلومات النظام</h3>
+                        <div class="info-box">
+                            <strong>الإصدار:</strong> 1.1.0<br>
+                            <strong>آخر تحديث:</strong> <span id="last-update-time">غير متوفر</span><br>
+                            <strong>حالة الاتصال:</strong> <span id="connection-status">متصل</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h3>الإشعارات</h3>
+            <button class="btn btn-icon btn-secondary" style="width: 30px; height: 30px; font-size: 12px;" onclick="clearAllNotifications()">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="notifications-list" id="notificationsList">
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <p>لا توجد إشعارات</p>
+            </div>
+        </div>
+    </div>
+     <!-- New Case Modal -->
+    <div class="modal" id="new-case-modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3>دعوى جديدة</h3>
+                <button class="close-btn" onclick="modalManager.close('new-case-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-case-form" onsubmit="saveNewCase(event)">
+                    <h4 style="margin-bottom: 15px; color: var(--primary-blue);">المعلومات الأساسية</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>رقم الدعوى <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-case-number" required>
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ الرفع <span style="color: var(--error-red);">*</span></label>
+                            <input type="date" id="new-case-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الأولوية</label>
+                            <select id="new-case-priority">
+                                <option value="عادية">عادية</option>
+                                <option value="مهمة">مهمة</option>
+                                <option value="عاجلة">عاجلة</option>
+                                <option value="طارئة">طارئة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>الحالة</label>
+                            <select id="new-case-status">
+                                <option value="مسودة">مسودة</option>
+                                <option value="مرفوع">مرفوع</option>
+                                <option value="في المحكمة">في المحكمة</option>
+                                <option value="صدور حكم">صدور حكم</option>
+                                <option value="تنفيذ">تنفيذ</option>
+                                <option value="مغلق">مغلق</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المبلغ (IQD) <span style="color: var(--error-red);">*</span></label>
+                            <input type="number" id="new-case-amount" required min="0">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h4 style="margin-bottom: 15px; color: var(--primary-blue);">أطراف الدعوى</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>اسم المدعي <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-case-plaintiff-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>هاتف المدعي</label>
+                            <input type="tel" id="new-case-plaintiff-phone">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم المدعى عليه <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-case-defendant-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>هاتف المدعى عليه <span style="color: var(--error-red);">*</span></label>
+                            <input type="tel" id="new-case-defendant-phone" required placeholder="07XXXXXXXXX">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h4 style="margin-bottom: 15px; color: var(--primary-blue);">التفاصيل القانونية</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>المحامي المسؤول</label>
+                            <select id="new-case-lawyer">
+                                <option value="">اختر محامي...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المحكمة</label>
+                            <input type="text" id="new-case-court">
+                        </div>
+                        <div class="form-group">
+                            <label>الجلسة القادمة</label>
+                            <input type="datetime-local" id="new-case-next-hearing">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>الملاحظات</label>
+                        <textarea id="new-case-notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('new-case-modal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('new-case-form').requestSubmit()">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Defendant Modal -->
+    <div class="modal" id="new-defendant-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>مدعى عليه جديد</h3>
+                <button class="close-btn" onclick="modalManager.close('new-defendant-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-defendant-form" onsubmit="saveNewDefendant(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>الاسم <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-defendant-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الهاتف <span style="color: var(--error-red);">*</span></label>
+                            <input type="tel" id="new-defendant-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="new-defendant-email">
+                        </div>
+                        <div class="form-group">
+                            <label>جهة العمل</label>
+                            <input type="text" id="new-defendant-workplace">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>العنوان</label>
+                        <textarea id="new-defendant-address" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('new-defendant-modal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('new-defendant-form').requestSubmit()">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Lawyer Modal -->
+    <div class="modal" id="new-lawyer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>محامي جديد</h3>
+                <button class="close-btn" onclick="modalManager.close('new-lawyer-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-lawyer-form" onsubmit="saveNewLawyer(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>الاسم <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-lawyer-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الترخيص <span style="color: var(--error-red);">*</span></label>
+                            <input type="text" id="new-lawyer-license" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الهاتف <span style="color: var(--error-red);">*</span></label>
+                            <input type="tel" id="new-lawyer-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>التخصص</label>
+                            <input type="text" id="new-lawyer-specialty">
+                        </div>
+                        <div class="form-group">
+                            <label>سنوات الخبرة</label>
+                            <input type="number" id="new-lawyer-experience" min="0">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('new-lawyer-modal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('new-lawyer-form').requestSubmit()">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Deduction Modal -->
+    <div class="modal" id="new-deduction-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>استقطاع جديد</h3>
+                <button class="close-btn" onclick="modalManager.close('new-deduction-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-deduction-form" onsubmit="saveNewDeduction(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>رقم الدعوى <span style="color: var(--error-red);">*</span></label>
+                            <select id="new-deduction-case" required>
+                                <option value="">اختر دعوى...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المبلغ (IQD) <span style="color: var(--error-red);">*</span></label>
+                            <input type="number" id="new-deduction-amount" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>التاريخ <span style="color: var(--error-red);">*</span></label>
+                            <input type="date" id="new-deduction-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الطريقة</label>
+                            <select id="new-deduction-method">
+                                <option value="نقد">نقد</option>
+                                <option value="تحويل بنكي">تحويل بنكي</option>
+                                <option value="شيك">شيك</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>الملاحظات</label>
+                        <textarea id="new-deduction-notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('new-deduction-modal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('new-deduction-form').requestSubmit()">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Details Modal -->
+    <div class="modal" id="case-details-modal">
+        <div class="modal-content" style="max-width: 1100px;">
+            <div class="modal-header">
+                <h3>تفاصيل الدعوى</h3>
+                <button class="close-btn" onclick="modalManager.close('case-details-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="case-details-content">
+                    <!-- Will be filled dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('case-details-modal')">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal" id="new-template-modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>قالب وثيقة جديد</h3>
+                <button class="close-btn" onclick="modalManager.close('new-template-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-template-form" onsubmit="saveNewTemplate(event)">
+                    <div class="form-group">
+                        <label>اسم القالب <span style="color: var(--error-red);">*</span></label>
+                        <input type="text" id="new-template-name" required placeholder="مثال: عقد توكيل">
+                    </div>
+                    <div class="form-group">
+                        <label>نوع القالب</label>
+                        <select id="new-template-type">
+                            <option value="عقد">عقد</option>
+                            <option value="توكيل">توكيل</option>
+                            <option value="مذكرة">مذكرة</option>
+                            <option value="لائحة">لائحة</option>
+                            <option value="طلب">طلب</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>محتوى القالب <span style="color: var(--error-red);">*</span></label>
+                        <textarea id="new-template-content" required rows="15" placeholder="أدخل محتوى القالب هنا..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="modalManager.close('new-template-modal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('new-template-form').requestSubmit()">
+                    <i class="fas fa-save"></i> حفظ القالب
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="modal-manager.js"></script>
+    <script src="shared-config.js"></script>
+    <script>
