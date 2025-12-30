@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="manifest.json">
+    <title>تطبيق المحامي</title>
+    <link rel="icon" type="image/png" href="Gemini_Generated_Image_dy7jiwdy7jiwdy7j.png">
+    <link rel="apple-touch-icon" href="Gemini_Generated_Image_dy7jiwdy7jiwdy7j.png">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- صفحة تسجيل الدخول -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="logo">
+                <img src="Gemini_Generated_Image_dy7jiwdy7jiwdy7j.png" alt="شعار التطبيق" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 2px 12px #6366f1; margin-bottom: 10px;">
+                <h1>تطبيق المحامي</h1>
+                <p>نظام إدارة الدعاوى القضائية</p>
+            </div>
+            
+            <div class="login-card">
+                <h2>تسجيل الدخول</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            اسم المحامي
+                        </label>
+                        <input type="text" id="lawyer-name" placeholder="أدخل اسمك الكامل" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-id-card"></i>
+                            رقم الترخيص
+                        </label>
+                        <input type="text" id="lawyer-license" placeholder="أدخل رقم الترخيص" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>دخول</span>
+                    </button>
+                </form>
+                
+                <div id="login-error" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- حاوية الإشعارات -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- الصفحة الرئيسية -->
+    <div id="main-page" class="page">
+        <!-- الرأسية -->
+        <div class="header">
+            <div class="header-content">
+                <button class="btn-menu" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="header-logo">
+                    <img src="Gemini_Generated_Image_dy7jiwdy7jiwdy7j.png" alt="شعار التطبيق" style="width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 1px 6px #6366f1;">
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-theme" onclick="toggleTheme()" title="تبديل الوضع">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="btn-notifications" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" style="display:none;">0</span>
+                    </button>
+                    <button class="btn-chat" onclick="openChat()" style="position: relative;">
+                        <i class="fas fa-comments"></i>
+                        <span class="chat-badge" style="
+                            display: none;
+                            position: absolute;
+                            top: 8px;
+                            right: 8px;
+                            background: linear-gradient(135deg, #ef4444, #dc2626);
+                            color: white;
+                            border-radius: 50%;
+                            width: 20px;
+                            height: 20px;
+                            font-size: 11px;
+                            font-weight: bold;
+                            align-items: center;
+                            justify-content: center;
+                            border: 2px solid white;
+                            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+                            animation: pulse 2s infinite;
+                        ">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريط الجانبي -->
+        <div id="sidebar" class="sidebar">
+            
+            <div class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-section-title">القضايا</div>
+                    <button class="menu-item active" onclick="filterCases('all', this)">
+                        <i class="fas fa-folder-open"></i>
+                        <span>جميع القضايا</span>
+                        <span class="menu-badge" id="count-all">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('مسودة', this)">
+                        <i class="fas fa-file-alt"></i>
+                        <span>مسودة</span>
+                        <span class="menu-badge" id="count-draft">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('مرفوع', this)">
+                        <i class="fas fa-upload"></i>
+                        <span>مرفوع</span>
+                        <span class="menu-badge" id="count-filed">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('في المحكمة', this)">
+                        <i class="fas fa-gavel"></i>
+                        <span>في المحكمة</span>
+                        <span class="menu-badge" id="count-court">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('صدور حكم', this)">
+                        <i class="fas fa-scroll"></i>
+                        <span>صدور حكم</span>
+                        <span class="menu-badge" id="count-verdict">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('تنفيذ', this)">
+                        <i class="fas fa-tasks"></i>
+                        <span>تنفيذ</span>
+                        <span class="menu-badge" id="count-execution">0</span>
+                    </button>
+                    <button class="menu-item" onclick="filterCases('مغلق', this)">
+                        <i class="fas fa-check-circle"></i>
+                        <span>مغلق</span>
+                        <span class="menu-badge" id="count-closed">0</span>
+                    </button>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-section-title">أخرى</div>
+                    <button class="menu-item" onclick="navigateTo('deductions', event)">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>الاستقطاعات</span>
+                    </button>
+                    <button class="menu-item" onclick="navigateTo('profile', event)">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </button>
+                    <button class="menu-item menu-item-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخلفية المظلمة للشريط الجانبي -->
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <!-- لوحة الإشعارات -->
+        <div id="notifications-panel" class="notifications-panel">
+            <div class="notifications-header">
+                <h3>الإشعارات</h3>
+                <button class="btn-close-notifications" onclick="toggleNotifications()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notifications-list" id="notifications-list">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+        </div>
+
+        <!-- لوحة المحادثة -->
+        <div id="chat-panel" class="chat-panel">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <i class="fas fa-user-shield"></i>
+                    <div>
+                        <h3>الإدارة</h3>
+                        <p class="chat-status">متصل</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-clear-chat" onclick="clearAllMessages()" title="مسح المحادثة" 
+                            style="background: none; border: none; color: #ef4444; padding: 8px 12px; cursor: pointer; border-radius: 8px;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="btn-close-chat" onclick="closeChat()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKeyPress(event)">
+                <button class="btn-send-message" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- محتوى الصفحات -->
+        <div class="content">
+            <!-- صفحة الدعاوى -->
+            <div id="cases-content" class="page-content active">
+                <div class="page-header">
+                    <h2>
+                        <i class="fas fa-folder-open"></i>
+                        <span id="page-title">جميع القضايا</span>
+                    </h2>
+                    <div class="cases-count" id="cases-count">0 دعوى</div>
+                </div>
+                
+                <div id="cases-list" class="cases-list">
+                    <!-- سيتم ملء الدعاوى هنا -->
+                </div>
+            </div>
+
+            <!-- صفحة الاستقطاعات -->
+            <div id="deductions-content" class="page-content">
+                <div class="page-header">
+                    <h2>
+                        <i class="fas fa-money-bill-wave"></i>
+                        الاستقطاعات
+                    </h2>
+                </div>
+                
+                <!-- زر إضافة استقطاع منبثق -->
+                <button class="btn-add" onclick="showAddDeductionModal()" title="إضافة استقطاع جديد">
+                    <i class="fas fa-plus"></i>
+                </button>
+                
+                <div id="deductions-list" class="deductions-list">
+                    <!-- سيتم ملء الاستقطاعات هنا -->
+                </div>
+            </div>
+
+            <!-- صفحة الملف الشخصي -->
+            <div id="profile-content" class="page-content">
+                <div class="page-header">
+                    <h2>
+                        <i class="fas fa-user-circle"></i>
+                        الملف الشخصي
+                    </h2>
+                </div>
+                
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3 id="profile-name">اسم المحامي</h3>
+                    <p id="profile-license">رقم الترخيص: 12345</p>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-folder"></i>
+                            <div>
+                                <strong id="total-cases">0</strong>
+                                <span>إجمالي الدعاوى</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <strong id="active-cases">0</strong>
+                                <span>دعاوى نشطة</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-money-bill"></i>
+                            <div>
+                                <strong id="total-deductions">0</strong>
+                                <span>استقطاعات</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تفاصيل الدعوى -->
+    <div id="case-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-folder-open"></i>
+                    تفاصيل الدعوى
+                </h3>
+                <button class="btn-close" onclick="closeCaseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="case-details">
+                <!-- سيتم ملء التفاصيل هنا -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="showUpdateCaseForm()">
+                    <i class="fas fa-edit"></i>
+                    تحديث الدعوى
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تحديث الدعوى -->
+    <div id="update-case-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-edit"></i>
+                    تحديث الدعوى
+                </h3>
+                <button class="btn-close" onclick="closeUpdateCaseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="update-case-form">
+                    <div class="form-group">
+                        <label>حالة الدعوى</label>
+                        <select id="update-status">
+                            <option value="مسودة">مسودة</option>
+                            <option value="مرفوع">مرفوع</option>
+                            <option value="في المحكمة">في المحكمة</option>
+                            <option value="صدور حكم">صدور حكم</option>
+                            <option value="تنفيذ">تنفيذ</option>
+                            <option value="مغلق">مغلق</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>المرحلة</label>
+                        <input type="text" id="update-stage" placeholder="مثال: جلسة مرافعة">
+                    </div>
+                    
+                    <div id="execution-options" class="execution-options" style="display: none;">
+                        <h4>خيارات التنفيذ</h4>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="execution-deduction">
+                                <span>تم الاستقطاع</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="execution-seizure">
+                                <span>تم الحجز</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-save"></i>
+                        حفظ التحديثات
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إضافة استقطاع -->
+    <div id="add-deduction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-plus"></i>
+                    إضافة استقطاع جديد
+                </h3>
+                <button class="btn-close" onclick="closeAddDeductionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="add-deduction-form">
+                    <div class="form-group">
+                        <label>الدعوى المرتبطة</label>
+                        <select id="deduction-case" required>
+                            <option value="">اختر الدعوى</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>المبلغ</label>
+                        <input type="number" id="deduction-amount" placeholder="أدخل المبلغ" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>التاريخ</label>
+                        <input type="date" id="deduction-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <textarea id="deduction-notes" rows="3" placeholder="ملاحظات إضافية"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-save"></i>
+                        حفظ الاستقطاع
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- التطبيق -->
+    <script src="app.js"></script>
+</body>
+</html>
