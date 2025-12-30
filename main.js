@@ -27,7 +27,8 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js')
         },
         backgroundColor: '#f8fafc',
-        show: false
+        show: false,
+        frame: false // حذف إطار النظام لإخفاء أزرار الإغلاق والتكبير والتصغير
     });
 
     // تحميل الملف الرئيسي
@@ -225,12 +226,17 @@ ipcMain.handle('load-file', async (event, filename) => {
         });
 
         if (filePaths && filePaths[0]) {
-            const data = fs.readFileSync(filePaths[0], 'utf8');
-            return { success: true, data: JSON.parse(data) };
+                const data = fs.readFileSync(filePaths[0], 'utf8');
+                try {
+                    const jsonData = JSON.parse(data);
+                    return { success: true, data: jsonData };
+                } catch (err) {
+                    return { success: false, error: 'فشل في استعادة بيانات الملف: الملف غير صالح أو غير صحيح' };
+                }
         }
         return { success: false, error: 'تم الإلغاء' };
     } catch (error) {
-        return { success: false, error: error.message };
+            return { success: false, error: 'فشل في استعادة بيانات الملف: الملف غير صالح أو غير صحيح' };
     }
 });
 
@@ -263,4 +269,32 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+});
+
+/**
+ * التحكم في النافذة من الواجهة
+ */
+ipcMain.handle('window-control', async (event, action) => {
+    if (!mainWindow) return;
+    switch (action) {
+        case 'close':
+            mainWindow.close();
+            break;
+        case 'minimize':
+            mainWindow.minimize();
+            break;
+        case 'maximize':
+            if (mainWindow.isMaximized()) {
+                mainWindow.unmaximize();
+            } else {
+                mainWindow.maximize();
+            }
+            break;
+        case 'toggleSidebar':
+            mainWindow.webContents.send('menu-navigate', 'toggleSidebar');
+            break;
+        default:
+            break;
+    }
+    return { success: true };
 });

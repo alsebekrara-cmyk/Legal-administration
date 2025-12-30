@@ -17,18 +17,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
             return { success: false, error: error.message };
         }
     },
-    
     // معلومات النظام
     platform: process.platform,
-    
     // إدارة الملفات
     saveFile: (data, filename) => ipcRenderer.invoke('save-file', data, filename),
     loadFile: (filename) => ipcRenderer.invoke('load-file', filename),
-    
     // الإشعارات
     showNotification: (title, body) => {
         new Notification(title, { body });
-    }
+    },
+    // التحكم في النافذة من الواجهة
+    windowControl: (action) => ipcRenderer.invoke('window-control', action)
 });
 
 // دوال مساعدة عامة
